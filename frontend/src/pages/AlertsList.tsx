@@ -50,7 +50,10 @@
 //   );
 // }
 // src/pages/AlertsList.tsx
+
+
 import { useEffect, useState } from "react";
+import { io, Socket } from "socket.io-client";
 import { axiosInstance } from "../api/axiosInstance";
 
 type Alert = {
@@ -70,6 +73,7 @@ export default function AlertsList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 1) Начальный запрос
     axiosInstance
       .get<Alert[]>("/alerts")
       .then(res => {
@@ -78,6 +82,28 @@ export default function AlertsList() {
       })
       .catch(err => console.error("Alerts fetch error:", err))
       .finally(() => setLoading(false));
+
+    // 2) Подключаемся к WebSocket
+    const socket: Socket = io("http://localhost:4000");
+
+    socket.on("connect", () => {
+      console.log("✅ WebSocket connected:", socket.id);
+    });
+
+    // 3) Приход новых алертов — добавляем их в начало списка
+    socket.on("new-alert", (newAlert: Alert) => {
+      console.log("🛰️ Received new-alert:", newAlert);
+      setAlerts(prev => [newAlert, ...prev]);
+    });
+
+    socket.on("disconnect", () => {
+      console.warn("🛑 WebSocket disconnected");
+    });
+
+    // 4) Очистка при размонтировании
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   if (loading) return <p>Loading alerts…</p>;

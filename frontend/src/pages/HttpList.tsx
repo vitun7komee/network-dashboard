@@ -48,15 +48,81 @@
 //   );
 // }
 // src/pages/HttpList.tsx
+
+
+
+// import { useEffect, useState } from "react";
+// import { axiosInstance } from "../api/axiosInstance";
+
+// type HttpLog = {
+//   id: number;
+//   timestamp: string;
+//   host: string;
+//   uri: string;
+//   method: string;
+//   src_ip: string;
+//   dest_ip: string;
+// };
+
+// export default function HttpList() {
+//   const [logs, setLogs] = useState<HttpLog[]>([]);
+//   const [loading, setLoading] = useState(true);
+
+//   useEffect(() => {
+//     axiosInstance
+//       .get<HttpLog[]>("/http")
+//       .then(res => {
+//         console.log("GET /http response:", res.data);
+//         setLogs(res.data);
+//       })
+//       .catch(err => console.error("HTTP logs fetch error:", err))
+//       .finally(() => setLoading(false));
+//   }, []);
+
+//   if (loading) return <p>Loading HTTP logs…</p>;
+//   if (logs.length === 0) return <p>No HTTP logs yet.</p>;
+
+//   return (
+//     <div style={{ padding: 16 }}>
+//       <h1>HTTP Logs</h1>
+//       <table border={1} cellPadding={8} cellSpacing={0}>
+//         <thead>
+//           <tr>
+//             <th>Time</th>
+//             <th>Method</th>
+//             <th>Host</th>
+//             <th>URI</th>
+//             <th>Src IP</th>
+//             <th>Dest IP</th>
+//           </tr>
+//         </thead>
+//         <tbody>
+//           {logs.map(l => (
+//             <tr key={l.id}>
+//               <td>{new Date(l.timestamp).toLocaleString()}</td>
+//               <td>{l.method}</td>
+//               <td>{l.host}</td>
+//               <td>{l.uri}</td>
+//               <td>{l.src_ip}</td>
+//               <td>{l.dest_ip}</td>
+//             </tr>
+//           ))}
+//         </tbody>
+//       </table>
+//     </div>
+//   );
+// }
+
 import { useEffect, useState } from "react";
+import { io, Socket } from "socket.io-client";
 import { axiosInstance } from "../api/axiosInstance";
 
 type HttpLog = {
   id: number;
   timestamp: string;
-  host: string;
-  uri: string;
-  method: string;
+  host: string | null;
+  uri: string | null;
+  method: string | null;
   src_ip: string;
   dest_ip: string;
 };
@@ -66,6 +132,7 @@ export default function HttpList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // 1) Начальный запрос
     axiosInstance
       .get<HttpLog[]>("/http")
       .then(res => {
@@ -74,6 +141,28 @@ export default function HttpList() {
       })
       .catch(err => console.error("HTTP logs fetch error:", err))
       .finally(() => setLoading(false));
+
+    // 2) Подключаем WebSocket
+    const socket: Socket = io("http://localhost:4000");
+
+    socket.on("connect", () => {
+      console.log("✅ WebSocket connected:", socket.id);
+    });
+
+    // 3) Приход новых HTTP-логов — добавляем их в начало списка
+    socket.on("new-http", (newLog: HttpLog) => {
+      console.log("🛰️ Received new-http:", newLog);
+      setLogs(prev => [newLog, ...prev]);
+    });
+
+    socket.on("disconnect", () => {
+      console.warn("🛑 WebSocket disconnected");
+    });
+
+    // 4) Очистка
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   if (loading) return <p>Loading HTTP logs…</p>;
@@ -97,9 +186,9 @@ export default function HttpList() {
           {logs.map(l => (
             <tr key={l.id}>
               <td>{new Date(l.timestamp).toLocaleString()}</td>
-              <td>{l.method}</td>
-              <td>{l.host}</td>
-              <td>{l.uri}</td>
+              <td>{l.method ?? "—"}</td>
+              <td>{l.host ?? "—"}</td>
+              <td>{l.uri ?? "—"}</td>
               <td>{l.src_ip}</td>
               <td>{l.dest_ip}</td>
             </tr>

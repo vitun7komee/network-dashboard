@@ -55,12 +55,13 @@ await pool.query(`
 
 // Запускаем и экспортируем клиент
 initDb().catch(err => {
-  console.error("DB init error:", err);
+  console.error("✅ DB init error:", err);
   process.exit(1);
 });
 
-pool.on("connect", () => {
-    console.log("🔗 Connected to PostgreSQL");
+//pool.on("connect", () => {
+pool.once("connect", () => {
+    console.log("🔗 Connected to PostgreSQL (first connection only)");
   });
   pool.on("error", err => {
     console.error("❌ PostgreSQL error:", err);
