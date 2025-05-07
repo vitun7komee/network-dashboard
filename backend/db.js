@@ -1,0 +1,71 @@
+// backend/db.js
+const { Pool } = require("pg");
+
+const pool = new Pool({
+  user: "postgres",
+  host: "localhost",
+  database: "suricata_logs",
+  password: "123",
+  port: 5432,
+});
+
+// При подключении создаём таблицы, если их нет
+async function initDb() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS suricata_alerts (
+      id SERIAL PRIMARY KEY,
+      timestamp TIMESTAMP NOT NULL,
+      alert_category VARCHAR(255) NOT NULL,
+      alert_severity INTEGER NOT NULL,
+      alert_message TEXT,
+      src_ip INET,
+      dest_ip INET,
+      src_port INTEGER,
+      dest_port INTEGER
+    );
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS suricata_http (
+      id SERIAL PRIMARY KEY,
+      timestamp TIMESTAMP NOT NULL,
+      host VARCHAR(255),
+      uri VARCHAR(255),
+      method VARCHAR(10),
+      src_ip INET,
+      dest_ip INET
+    );
+  `);
+
+  //new! dns info
+// new! suricata_dns table
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS suricata_dns (
+      id SERIAL PRIMARY KEY,
+      timestamp TIMESTAMP,
+      type TEXT,
+      query TEXT,
+      src_ip TEXT,
+      dest_ip TEXT
+    );
+  `);
+
+  console.log("Tables ensured");
+}
+
+// Запускаем и экспортируем клиент
+initDb().catch(err => {
+  console.error("DB init error:", err);
+  process.exit(1);
+});
+
+pool.on("connect", () => {
+    console.log("🔗 Connected to PostgreSQL");
+  });
+  pool.on("error", err => {
+    console.error("❌ PostgreSQL error:", err);
+  });
+
+
+module.exports = pool;
+
