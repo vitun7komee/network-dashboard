@@ -169,7 +169,17 @@ const http      = require("http");
 const chokidar  = require("chokidar");
 const pool      = require("./db");           // наш db.js с once("connect") и initialized-флагом
 const socketIO  = require("socket.io");
+//REPUTATION NEW <
+const ipReputationFetchRoute = require("./routes/ipReputationFetch");
+const cron = require("node-cron");
+const axios = require("axios");
+const ipReputationRoutes = require("./routes/ipReputationFetch");
+//REPUTATION NEW >
 
+//DDOS NEW
+const ddosDetectionRoute = require("./routes/ddosDetection");
+const anomalyDetectionRoute = require("./routes/anomalyDetection");
+//DDOS NEW
 const app       = express();
 const server    = http.createServer(app);
 const io        = socketIO(server, { cors: { origin: "*" } });
@@ -177,6 +187,7 @@ const io        = socketIO(server, { cors: { origin: "*" } });
 const PORT      = process.env.PORT || 4000;
 const EVE_PATH  = process.env.EVE_PATH || "C:/Program Files/Suricata/log/eve.json";
 
+//app.use("/ip-reputation", ipReputationFetchRoute);//REPUTATION NEW
 app.use(cors());
 app.use(express.json());
 
@@ -290,6 +301,30 @@ function ingestNewLines() {
           .then(res => io.emit("new-dns", res.rows[0]))
           .catch(e => console.error("DNS insert error:", e));
         }
+        //DDOS NEW 
+          // INSERT flow
+    if (log.event_type === "flow") {
+      const { timestamp, src_ip, dest_ip, src_port, dest_port, proto } = log;
+
+      if (src_ip && dest_ip) {
+        pool.query(
+          `INSERT INTO suricata_flows (timestamp, src_ip, dest_ip, src_port, dest_port, proto)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          RETURNING *;`,
+          [
+            new Date(timestamp),
+            src_ip,
+            dest_ip,
+            src_port || null,
+            dest_port || null,
+            proto || null
+          ]
+        )
+        .then(res => io.emit("new-flow", res.rows[0]))
+        .catch(e => console.error("Flow insert error:", e));
+      }
+    }
+
       });
 
       // обновляем позицию
@@ -348,6 +383,31 @@ app.get("/dns", async (req, res) => {
     res.status(500).send("Error fetching DNS logs");
   }
 });
+//flows
+app.get("/flows", async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      "SELECT * FROM suricata_flows ORDER BY timestamp DESC LIMIT 100"
+    );
+    res.json(rows);
+  } catch (e) {
+    console.error("Error fetching flow logs:", e);
+    res.status(500).send("Error fetching flow logs");
+  }
+});
+
+//REPUTATION NEW
+app.use("/ip-reputation", ipReputationRoutes);
+cron.schedule("*/5 * * * *", () => {
+  axios.post("http://localhost:4000/ip-reputation/fetch")
+    .then(() => console.log("IP reputation updated"))
+    .catch(err => console.error("Error updating IP reputation:", err));
+});
+//DDOS NEW
+app.use("/api/ddos-detection", ddosDetectionRoute);
+// ANOMALY ANALYSIS
+app.use("/api/anomaly-detection", anomalyDetectionRoute);
+
 
 // // Запускаем HTTP + WebSocket сервер
 // server.listen(PORT, () => {

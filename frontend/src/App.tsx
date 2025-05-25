@@ -44,98 +44,21 @@ import React, { useEffect } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; // ← обязательно
 import { dataProvider } from "./dataProvider";
 import AlertsList from "./pages/AlertsList";
 import DnsList from "./pages/DnsList";
 import HttpList from "./pages/HttpList";
 
 const SOCKET_URL = "http://localhost:4000"; // или твой бэкенд
+const queryClient = new QueryClient();
 
-/**
- * Хук для подписки на WebSocket-события и инвалидации кэша
- */
-// const RealTimeUpdater: React.FC = () => {
-//   const queryClient = useQueryClient();
+import AnomalyDashboard from "./pages/AnomalyDashboard"; // путь к компоненту
+import Dashboard from "./pages/Dashboard"; // путь скорректируй
+import DdosDashboard from "./pages/DdosDashboard"; //DDOS NEW
 
-//   useEffect(() => {
-//     const socket: Socket = io(SOCKET_URL);
+import IpReputationList from "./pages/IpReputationList";
 
-//     socket.on("connect", () => {
-//       console.log("✅ WebSocket connected:", socket.id);
-//     });
-
-//     // При новом алерте — обновляем список AlertsList
-
-//     socket.on("new-alert", () => {
-//       queryClient.invalidateQueries(["alerts"]);
-//     });
-
-//     // При новом HTTP-логе — обновляем HttpList
-//     socket.on("new-http", () => {
-//       queryClient.invalidateQueries(["http"]);
-//     });
-
-//     // При новом DNS-логе — обновляем DnsList
-//     socket.on("new-dns", () => {
-//       queryClient.invalidateQueries(["dns"]);
-//     });
-
-//     socket.on("disconnect", () => {
-//       console.warn("🛑 WebSocket disconnected");
-//     });
-
-//     return () => {
-//       socket.disconnect();
-//     };
-//   }, [queryClient]);
-
-//   return null;
-// };
-// const RealTimeUpdater: React.FC = () => {
-//   const queryClient = useQueryClient();
-
-//   useEffect(() => {
-//     const socket: Socket = io(SOCKET_URL);
-
-//     socket.on("connect", () => {
-//       console.log("✅ WebSocket connected:", socket.id);
-//     });
-
-//     socket.on("new-alert", data => {
-//       console.log("🛰️ Received new-alert:", data);
-//       queryClient.invalidateQueries({
-//         queryKey: ["alerts"],
-//         refetchType: "active"
-//       });
-//     });
-
-//     socket.on("new-http", data => {
-//       console.log("🛰️ Received new-http:", data);
-//       queryClient.invalidateQueries({
-//         queryKey: ["http"],
-//         refetchType: "active"
-//       });
-//     });
-
-//     socket.on("new-dns", data => {
-//       console.log("🛰️ Received new-dns:", data);
-//       queryClient.invalidateQueries({
-//         queryKey: ["dns"],
-//         refetchType: "active"
-//       });
-//     });
-
-//     socket.on("disconnect", () => {
-//       console.warn("🛑 WebSocket disconnected");
-//     });
-
-//     return () => {
-//       socket.disconnect();
-//     };
-//   }, [queryClient]);
-
-//   return null;
-// };
 const RealTimeUpdater: React.FC = () => {
   const queryClient = useQueryClient();
 
@@ -193,7 +116,7 @@ function App() {
   //const queryClient = new QueryClient();
 
   return (
-    //<QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         {/* Хук подписки должен быть внутри провайдера React Query */}
         <RealTimeUpdater />
@@ -206,16 +129,24 @@ function App() {
             { name: "alerts", list: "/alerts" },
             { name: "http",   list: "/http"   },
             { name: "dns",    list: "/dns"    },
+            { name: "ddos", list: "/ddos"     },
+            { name: "ip-reputation", list: "/ip-reputation"},
+            { name: "anomalies", list: "/anomalies" },
           ]}
         >
           <Routes>
+            <Route path="/" element={<Dashboard />} />
             <Route path="/alerts" element={<AlertsList />} />
             <Route path="/http"    element={<HttpList />} />
             <Route path="/dns"     element={<DnsList />} />
+            <Route path="/ip-reputation" element={<IpReputationList />} />
+            <Route path="/ddos" element={<DdosDashboard />} />
+            <Route path="/anomalies" element={<AnomalyDashboard />} />
+
           </Routes>
         </Refine>
       </BrowserRouter>
-    //</QueryClientProvider>
+    </QueryClientProvider>
   );
 }
 

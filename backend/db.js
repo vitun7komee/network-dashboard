@@ -50,6 +50,31 @@ await pool.query(`
     );
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS ip_reputation (
+      ip INET PRIMARY KEY,
+      reputation TEXT,
+      score INTEGER,
+      country TEXT,
+      usage_type TEXT,
+      last_checked TIMESTAMP DEFAULT NOW()
+    );
+  `);
+  // DDOS
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS suricata_flows(
+      id SERIAL PRIMARY KEY,
+      timestamp TIMESTAMP NOT NULL,
+      src_ip INET,
+      dest_ip INET,
+      src_port INTEGER,
+      dest_port INTEGER,
+      proto TEXT
+    );
+  `);
+  
+  
+
   console.log("Tables ensured");
 }
 
