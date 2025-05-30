@@ -72,8 +72,44 @@ await pool.query(`
       proto TEXT
     );
   `);
-  
-  
+  await pool.query(`
+  CREATE TABLE IF NOT EXISTS suricata_alertsF (
+  id SERIAL PRIMARY KEY,
+  timestamp TIMESTAMP NOT NULL,
+  alert_category VARCHAR(255) NOT NULL,
+  alert_severity INTEGER NOT NULL,
+  alert_message TEXT,
+  signature TEXT,
+  signature_id INTEGER,
+  src_ip INET,
+  dest_ip INET,
+  src_port INTEGER,
+  dest_port INTEGER
+);
+  `);
+
+//   await pool.query(`
+//   CREATE TABLE IF NOT EXISTS heuristic_incidents (
+//   id SERIAL PRIMARY KEY,
+//   timestamp TIMESTAMP DEFAULT NOW(),
+//   type TEXT NOT NULL,
+//   description TEXT NOT NULL,
+//   severity TEXT CHECK (severity IN ('low', 'medium', 'high')) NOT NULL,
+//   resolved BOOLEAN DEFAULT false
+// );
+//   `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS heuristic_incidents (
+      id SERIAL PRIMARY KEY,
+      timestamp TIMESTAMP DEFAULT NOW(),
+      type TEXT NOT NULL,
+      description TEXT NOT NULL,
+      severity TEXT CHECK (severity IN ('low', 'medium', 'high')) NOT NULL,
+      resolved BOOLEAN DEFAULT false,
+      threat TEXT,
+      recommendations TEXT
+    );
+  `);
 
   console.log("Tables ensured");
 }

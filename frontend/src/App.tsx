@@ -46,18 +46,21 @@ import { io, Socket } from "socket.io-client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"; // ← обязательно
 import { dataProvider } from "./dataProvider";
-import AlertsList from "./pages/AlertsList";
+import AlertsPage from "./pages/Alerts"; // new alerts
 import DnsList from "./pages/DnsList";
 import HttpList from "./pages/HttpList";
-
 const SOCKET_URL = "http://localhost:4000"; // или твой бэкенд
 const queryClient = new QueryClient();
 
 import AnomalyDashboard from "./pages/AnomalyDashboard"; // путь к компоненту
 import Dashboard from "./pages/Dashboard"; // путь скорректируй
 import DdosDashboard from "./pages/DdosDashboard"; //DDOS NEW
+import SecurityStatusPage from "./pages/SecurityStatusPage"; //DDOS NEW
+import ThreatIntelPage from "./pages/Threat-Intel"; //DDOS NEW
+
 
 import IpReputationList from "./pages/IpReputationList";
+//FINAL
 
 const RealTimeUpdater: React.FC = () => {
   const queryClient = useQueryClient();
@@ -132,16 +135,23 @@ function App() {
             { name: "ddos", list: "/ddos"     },
             { name: "ip-reputation", list: "/ip-reputation"},
             { name: "anomalies", list: "/anomalies" },
+            { name: "dashboard", list: "/dashboard" },
+            { name: "security-status", list: "/security-status" }, // ← добавь это
+            { name: "threat-intel", list: "/threat-intel" }, // ← добавь это
           ]}
         >
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/alerts" element={<AlertsList />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            {/* <Route path="/alerts" element={<AlertsList />} /> */}
+            <Route path="/alerts" element={<AlertsPage />} />
             <Route path="/http"    element={<HttpList />} />
             <Route path="/dns"     element={<DnsList />} />
             <Route path="/ip-reputation" element={<IpReputationList />} />
             <Route path="/ddos" element={<DdosDashboard />} />
             <Route path="/anomalies" element={<AnomalyDashboard />} />
+            <Route path="/security-status" element={<SecurityStatusPage />} />
+            <Route path="/threat-intel" element={<ThreatIntelPage />} />
 
           </Routes>
         </Refine>
