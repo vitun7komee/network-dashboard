@@ -55,11 +55,11 @@ const queryClient = new QueryClient();
 import AnomalyDashboard from "./pages/AnomalyDashboard"; // путь к компоненту
 import Dashboard from "./pages/Dashboard"; // путь скорректируй
 import DdosDashboard from "./pages/DdosDashboard"; //DDOS NEW
+import IpReputationList from "./pages/IpReputationList";
 import SecurityStatusPage from "./pages/SecurityStatusPage"; //DDOS NEW
 import ThreatIntelPage from "./pages/Threat-Intel"; //DDOS NEW
+import ThreatLookup from "./pages/ThreatLookup";
 
-
-import IpReputationList from "./pages/IpReputationList";
 //FINAL
 
 const RealTimeUpdater: React.FC = () => {
@@ -138,6 +138,8 @@ function App() {
             { name: "dashboard", list: "/dashboard" },
             { name: "security-status", list: "/security-status" }, // ← добавь это
             { name: "threat-intel", list: "/threat-intel" }, // ← добавь это
+            { name: "threat-lookup", list: "/threat-lookup" },
+
           ]}
         >
           <Routes>
@@ -152,7 +154,7 @@ function App() {
             <Route path="/anomalies" element={<AnomalyDashboard />} />
             <Route path="/security-status" element={<SecurityStatusPage />} />
             <Route path="/threat-intel" element={<ThreatIntelPage />} />
-
+            <Route path="/threat-lookup" element={<ThreatLookup />} />
           </Routes>
         </Refine>
       </BrowserRouter>

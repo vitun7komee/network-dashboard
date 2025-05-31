@@ -189,6 +189,7 @@ const suspiciousIpsRoute = require("./routes/suspiciousIps");
 const criticalAlertsRoute = require("./routes/criticalAlerts");
 const uniqueSourcesRoute = require("./routes/uniqueSources");
 const heuristicsRoutes = require("./routes/heuristics");
+const lookupRoutes = require("./routes/lookup");
 
 const app       = express();
 const server    = http.createServer(app);
@@ -298,6 +299,7 @@ function ingestNewLines() {
         // INSERT http
         if (log.http) {
           const { timestamp, http: h, src_ip, dest_ip } = log;
+          //console.log("🚨 HTTP LOG:", h); // временно
           pool.query(
             `INSERT INTO suricata_http
                (timestamp, host, uri, method, src_ip, dest_ip)
@@ -315,7 +317,49 @@ function ingestNewLines() {
           .then(res => io.emit("new-http", res.rows[0]))
           .catch(e => console.error("HTTP insert error:", e));
         }
-
+        if (log.http) {
+          const { timestamp, http: h, src_ip, dest_ip } = log;
+        
+          const {
+            hostname,
+            url,
+            http_method,
+            http_user_agent,
+            status,
+            length,
+            protocol
+          } = h;
+        
+          pool.query(
+            `INSERT INTO suricata_httpF (
+              timestamp,
+              hostname,
+              url,
+              http_method,
+              http_user_agent,
+              status,
+              length,
+              protocol,
+              src_ip,
+              dest_ip
+            ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
+            [
+              new Date(timestamp),
+              hostname || null,
+              url || null,
+              http_method || null,
+              http_user_agent || null,
+              status || null,
+              length || null,
+              protocol || null,
+              src_ip,
+              dest_ip
+            ]
+          )
+            .then(res => io.emit("new-httpF", res.rows[0]))
+            .catch(e => console.error("HTTP-F insert error:", e));
+        }
+        
         // INSERT dns
         if (log.dns) {
           const { timestamp, dns, src_ip, dest_ip } = log;
@@ -617,6 +661,7 @@ app.use('/', suspiciousIpsRoute);   // /suspicious-ips и /suspicious-ips/fetch
 app.use("/", criticalAlertsRoute);
 app.use("/unique-sources", uniqueSourcesRoute);
 app.use("/heuristics", heuristicsRoutes);//  было /heuristics
+app.use("/lookup", lookupRoutes);
 // // Запускаем HTTP + WebSocket сервер
 // server.listen(PORT, () => {
 //   console.log(`🚀 Server listening on http://localhost:${PORT}`);

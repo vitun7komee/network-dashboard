@@ -111,6 +111,22 @@ await pool.query(`
     );
   `);
 
+  await pool.query(`
+CREATE TABLE IF NOT EXISTS suricata_httpF (
+  id SERIAL PRIMARY KEY,
+  timestamp TIMESTAMP NOT NULL,
+  hostname TEXT,
+  url TEXT,
+  http_method TEXT,
+  http_user_agent TEXT,
+  status INTEGER,
+  length INTEGER,
+  protocol TEXT,
+  src_ip INET,
+  dest_ip INET
+);
+
+  `);
   console.log("Tables ensured");
 }
 
