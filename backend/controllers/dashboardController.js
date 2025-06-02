@@ -23,11 +23,11 @@ exports.getOverview = async (req, res) => {
       GROUP BY alert_category;
     `);
 
-    // Геораспределение
+    // Геораспределение AND last_checked >= NOW() - INTERVAL '7 days'
     const geoDistribution = await db.query(`
       SELECT country, COUNT(*) AS count
       FROM ip_reputation
-      WHERE country IS NOT NULL
+      WHERE country IS NOT NULL 
       GROUP BY country
       ORDER BY count DESC
       LIMIT 10;

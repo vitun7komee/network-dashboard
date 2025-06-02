@@ -35,18 +35,26 @@ router.get("/securitystatus", async (req, res) => {
     const status = evaluateSecurity(alerts, flowCount);
 
     // Находим конкретную угрозу
-    const { rows: topThreats } = await pool.query(`
-      SELECT alert_message, COUNT(*) as count
+    // const { rows: topThreats } = await pool.query(`
+    //   SELECT alert_message, COUNT(*) as count
+    //   FROM suricata_alertsF
+    //   WHERE timestamp >= NOW() - INTERVAL '24 HOURS'
+    //   GROUP BY alert_message
+    //   ORDER BY count DESC
+    //   LIMIT 1
+    // `);
+        const { rows: topThreats } = await pool.query(`
+      SELECT signature, COUNT(*) as count
       FROM suricata_alertsF
       WHERE timestamp >= NOW() - INTERVAL '24 HOURS'
-      GROUP BY alert_message
+      GROUP BY signature
       ORDER BY count DESC
       LIMIT 1
     `);
 
     res.json({
       status,                          // "green", "yellow", "red"
-      most_common_threat: topThreats[0]?.alert_message || "None",
+      most_common_threat: topThreats[0]?.signature || "None",//alert_message
       threat_count: topThreats[0]?.count || 0
     });
 

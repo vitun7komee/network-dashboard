@@ -292,7 +292,15 @@ function ingestNewLines() {
             ]
           )
           
-          .then(res => io.emit("new-alert", res.rows[0]))
+           .then(res => io.emit("new-alert", res.rows[0]))
+    //       .then(res => {
+    //         io.emit("new-alert", res.rows[0]);
+
+    // // 👇 добавляем emit для critical alerts (severity === 1)
+    //       if (res.rows[0].alert_severity <= 3) {
+    //         io.emit("new-critical-alert", res.rows[0]);
+    //       }
+    //     })
           .catch(e => console.error("Alert insert error:", e));
         }
 
@@ -450,6 +458,81 @@ app.get("/alerts", async (req, res) => {
   }
 });
 //alerts final
+// app.get("/api/alerts", async (req, res) => {
+//   const {
+//     category,
+//     severity,
+//     src_ip,
+//     dest_ip,
+//     date_from,
+//     date_to,
+//     limit = 100,
+//     offset = 0
+//   } = req.query;
+
+//   let conditions = [];
+//   let values = [];
+//   let index = 1;
+
+//   if (category) {
+//     conditions.push(`alert_category = $${index++}`);
+//     values.push(category);
+//   }
+
+//   if (severity) {
+//     conditions.push(`alert_severity = $${index++}`);
+//     values.push(parseInt(severity));
+//   }
+
+//   if (src_ip) {
+//     conditions.push(`src_ip = $${index++}`);
+//     values.push(src_ip);
+//   }
+
+//   if (dest_ip) {
+//     conditions.push(`dest_ip = $${index++}`);
+//     values.push(dest_ip);
+//   }
+
+//   if (date_from) {
+//     conditions.push(`timestamp >= $${index++}`);
+//     values.push(new Date(date_from));
+//   }
+
+//   if (date_to) {
+//     conditions.push(`timestamp <= $${index++}`);
+//     values.push(new Date(date_to));
+//   }
+
+//   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+//   // const query = `
+//   //   SELECT *
+//   //   FROM suricata_alertsF
+//   //   ${whereClause}
+//   //   ORDER BY timestamp DESC
+//   //   LIMIT $${index++} OFFSET $${index}
+//   // `;
+//   const query = `
+//   SELECT DISTINCT ON (timestamp) *
+//   FROM suricata_alertsF
+//   ${whereClause}
+//   ORDER BY timestamp DESC
+//   LIMIT $${index++} OFFSET $${index}
+// `;
+
+//   values.push(parseInt(limit));
+//   values.push(parseInt(offset));
+
+//   try {
+//     const result = await pool.query(query, values);
+//     res.json(result.rows);
+//   } catch (err) {
+//     console.error("Error fetching alerts:", err);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
 app.get("/api/alerts", async (req, res) => {
   const {
     category,
@@ -466,9 +549,10 @@ app.get("/api/alerts", async (req, res) => {
   let values = [];
   let index = 1;
 
+  // Фильтры
   if (category) {
-    conditions.push(`alert_category = $${index++}`);
-    values.push(category);
+    conditions.push(`alert_category ILIKE $${index++}`);
+    values.push(`%${category}%`);
   }
 
   if (severity) {
@@ -476,13 +560,15 @@ app.get("/api/alerts", async (req, res) => {
     values.push(parseInt(severity));
   }
 
-  if (src_ip) {
-    conditions.push(`src_ip = $${index++}`);
+  const isValidInet = (ip) => /^(\d{1,3}\.){3}\d{1,3}$/.test(ip);
+
+  if (src_ip && isValidInet(src_ip)) {
+    conditions.push(`src_ip = $${index++}::inet`);
     values.push(src_ip);
   }
 
-  if (dest_ip) {
-    conditions.push(`dest_ip = $${index++}`);
+  if (dest_ip && isValidInet(dest_ip)) {
+    conditions.push(`dest_ip = $${index++}::inet`);
     values.push(dest_ip);
   }
 
@@ -499,7 +585,7 @@ app.get("/api/alerts", async (req, res) => {
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const query = `
-    SELECT *
+    SELECT DISTINCT ON (timestamp) *
     FROM suricata_alertsF
     ${whereClause}
     ORDER BY timestamp DESC
@@ -516,6 +602,7 @@ app.get("/api/alerts", async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 // Получение агрегированных данных для графика по подписям
 // app.get("/api/alerts/summary", async (req, res) => {

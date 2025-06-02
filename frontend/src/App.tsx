@@ -56,7 +56,6 @@ import AnomalyDashboard from "./pages/AnomalyDashboard"; // путь к комп
 import Dashboard from "./pages/Dashboard"; // путь скорректируй
 import DdosDashboard from "./pages/DdosDashboard"; //DDOS NEW
 import IpReputationList from "./pages/IpReputationList";
-import SecurityStatusPage from "./pages/SecurityStatusPage"; //DDOS NEW
 import ThreatIntelPage from "./pages/Threat-Intel"; //DDOS NEW
 import ThreatLookup from "./pages/ThreatLookup";
 
@@ -136,7 +135,7 @@ function App() {
             { name: "ip-reputation", list: "/ip-reputation"},
             { name: "anomalies", list: "/anomalies" },
             { name: "dashboard", list: "/dashboard" },
-            { name: "security-status", list: "/security-status" }, // ← добавь это
+            // { name: "security-status", list: "/security-status" }, // ← добавь это
             { name: "threat-intel", list: "/threat-intel" }, // ← добавь это
             { name: "threat-lookup", list: "/threat-lookup" },
 
@@ -152,7 +151,7 @@ function App() {
             <Route path="/ip-reputation" element={<IpReputationList />} />
             <Route path="/ddos" element={<DdosDashboard />} />
             <Route path="/anomalies" element={<AnomalyDashboard />} />
-            <Route path="/security-status" element={<SecurityStatusPage />} />
+            {/* <Route path="/security-status" element={<SecurityStatusPage />} /> */}
             <Route path="/threat-intel" element={<ThreatIntelPage />} />
             <Route path="/threat-lookup" element={<ThreatLookup />} />
           </Routes>

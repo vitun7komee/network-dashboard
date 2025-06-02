@@ -480,6 +480,22 @@ async function detectPortScanning() {
     );
   }
 }
+  // 🚩 9. Негативная репутация IP из ip_reputation (score > 20, например)
+//   async function detectBadReputationIps() {
+//     const result = await pool.query(`
+//       SELECT ip, reputation, score
+//       FROM ip_reputation
+//       WHERE score > 40
+//     `);
+  
+//     for (const row of result.rows) {
+//       await logHeuristic(
+//         "bad_ip_reputation",
+//         `IP ${row.ip} имеет плохую репутацию (${row.reputation}) с оценкой ${row.score}.`,
+//         "high"
+//       );
+//     }
+//   }
 
 // 🧪 Анализ всех эвристик
 router.post("/analyze", async (req, res) => {

@@ -4,16 +4,30 @@ const pool = require("../db");
 const { getIpReputation } = require("../utils/abuseIpCheck");
 
 const router = express.Router();
-router.get("/", async (req, res) => {
-    try {
-      const result = await pool.query("SELECT * FROM ip_reputation ORDER BY last_checked DESC");//score DESC
-      res.json(result.rows);
-    } catch (err) {
-      console.error("Error fetching IP reputation data:", err);
-      res.status(500).json({ error: "Failed to fetch IP reputation data" });
-    }
-  });
-  
+// router.get("/", async (req, res) => {
+//     try {
+//       const result = await pool.query("SELECT * FROM ip_reputation WHERE usage_type IS DISTINCT FROM 'reserved' ORDER BY last_checked DESC");//score DESC
+//       res.json(result.rows);
+//     } catch (err) {
+//       console.error("Error fetching IP reputation data:", err);
+//       res.status(500).json({ error: "Failed to fetch IP reputation data" });
+//     }
+//   });
+  router.get("/", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT *
+      FROM ip_reputation
+      WHERE usage_type IS DISTINCT FROM 'Reserved'
+      ORDER BY last_checked DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error("Error fetching IP reputation data:", err);
+    res.status(500).json({ error: "Failed to fetch IP reputation data" });
+  }
+});
+
 router.post("/fetch", async (req, res) => {
   try {
     const ipsToCheck = await pool.query(`
