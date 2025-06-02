@@ -2,7 +2,7 @@
 // const fetch = require("node-fetch");
 
 // //= process.env.ABUSEIPDB_API_KEY || 
-// const ABUSEIPDB_API_KEY = "036db2dea9e98a3da0d2504eec7553d01e98fedfb312f6e7c59eee61c999646e845872186ce6bbd5";
+// const ABUSEIPDB_API_KEY = "";
 // const BASE_URL = "https://api.abuseipdb.com/api/v2/check";
 
 // async function getIpReputation(ip) {
